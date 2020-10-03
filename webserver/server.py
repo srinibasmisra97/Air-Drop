@@ -1,19 +1,26 @@
 import json
 import os
+import configparser
 from flask import Flask, jsonify, request, send_from_directory, make_response
 from google.cloud import pubsub_v1, storage
 
-GCP_PROJECT = 'dev-trials-project'
-SUBSCRIPTION_ID = 'music-artefacts'
-GCS_BUCKET = "srini-music-artifacts"
-DOWNLOAD_FOLDER = "./downloads"
-SUBSCRIPTION_TIMEOUT = 5.0
-NUM_MESSAGES = 3
+CONFIG_ENV = os.environ.get("CONFIG_ENV") if os.environ.get("CONFIG_ENV") else "DEV"
+CONFIG_FILEPATH = os.path.join(os.getcwd(), "configs", "environment.cfg")
+
+cfg = configparser.RawConfigParser()
+cfg.read(CONFIG_FILEPATH)
+
+GCP_PROJECT = str(cfg.get(CONFIG_ENV, "GCP_PROJECT"))
+SUBSCRIPTION_ID = str(cfg.get(CONFIG_ENV, "SUBSCRIPTION_ID"))
+GCS_BUCKET = str(cfg.get(CONFIG_ENV, "GCS_BUCKET"))
+DOWNLOAD_FOLDER = str(cfg.get(CONFIG_ENV, "DOWNLOAD_FOLDER"))
+SUBSCRIPTION_TIMEOUT = float(cfg.get(CONFIG_ENV, "SUBSCRIPTION_TIMEOUT"))
+NUM_MESSAGES = int(cfg.get(CONFIG_ENV, "NUM_MESSAGES"))
 
 subscriber = pubsub_v1.SubscriberClient().from_service_account_file("./service-accounts/pull-messages-sa.json")
 subscription_path = subscriber.subscription_path(GCP_PROJECT, SUBSCRIPTION_ID)
 
-storage_client = storage.Client("GCP_PROJECT")
+storage_client = storage.Client(GCP_PROJECT)
 bucket = storage_client.bucket(GCS_BUCKET)
 
 app = Flask(__name__)
@@ -40,7 +47,7 @@ def pull_messages():
         ack_ids.append(received_message.ack_id)
         data = json.loads(received_message.message.data.decode('utf8').replace("'", '"'))
         blob = bucket.blob(data['filename'])
-        blob.download_to_filename(filename=os.path.join(DOWNLOAD_FOLDER, data['filename']))
+        blob.download_to_file(file_obj=open(os.path.join(DOWNLOAD_FOLDER, str(data['filename'])), 'wb'))
         print("Downloaded file {} to {}".format(data['filename'], os.path.join(DOWNLOAD_FOLDER, data['filename'])))
         messages.append(data)
 
@@ -62,15 +69,19 @@ def download_file():
             'msg': 'file not provided'
         }), 400
 
-    if not os.path.exists(DOWNLOAD_FOLDER):
-        os.mkdir(DOWNLOAD_FOLDER)
-
     filename = request.args.get('file')
+
+    print("Download from {}".format(os.path.join(DOWNLOAD_FOLDER, filename)))
+
+    if os.path.exists(os.path.join(DOWNLOAD_FOLDER, filename)):
+        return jsonify({
+            'success': False,
+            'msg': 'file not found'
+        }), 404
 
     response = make_response(send_from_directory(directory=DOWNLOAD_FOLDER, filename=filename))
     response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
     return response
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='127.0.0.1', port=5000, debug=True)
