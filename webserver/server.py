@@ -16,8 +16,11 @@ GCS_BUCKET = str(cfg.get(CONFIG_ENV, "GCS_BUCKET"))
 DOWNLOAD_FOLDER = str(cfg.get(CONFIG_ENV, "DOWNLOAD_FOLDER"))
 SUBSCRIPTION_TIMEOUT = float(cfg.get(CONFIG_ENV, "SUBSCRIPTION_TIMEOUT"))
 NUM_MESSAGES = int(cfg.get(CONFIG_ENV, "NUM_MESSAGES"))
+SERVICE_ACCOUNTS_DIRECTORY = str(cfg.get(CONFIG_ENV, "SERVICE_ACCOUNTS_DIRECTORY"))
 
-subscriber = pubsub_v1.SubscriberClient().from_service_account_file("./service-accounts/pull-messages-sa.json")
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(SERVICE_ACCOUNTS_DIRECTORY, "air-drop.json")
+
+subscriber = pubsub_v1.SubscriberClient()
 subscription_path = subscriber.subscription_path(GCP_PROJECT, SUBSCRIPTION_ID)
 
 storage_client = storage.Client(GCP_PROJECT)
@@ -73,7 +76,7 @@ def download_file():
 
     print("Download from {}".format(os.path.join(DOWNLOAD_FOLDER, filename)))
 
-    if os.path.exists(os.path.join(DOWNLOAD_FOLDER, filename)):
+    if not os.path.exists(os.path.join(DOWNLOAD_FOLDER, filename)):
         return jsonify({
             'success': False,
             'msg': 'file not found'
