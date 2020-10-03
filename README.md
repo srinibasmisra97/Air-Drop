@@ -4,7 +4,7 @@ This repository contains all the code required to setup the cloud function and t
 
 ## Infrastructure
 
-![Infrastructure Diagram](./Air Drop Infrastructure.jpg)
+![Infrastructure Diagram](Air Drop Infrastructure.jpg)
 
 The infrastructure has the following components:
 1. Google Cloud Storage Bucket.
