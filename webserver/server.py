@@ -44,7 +44,7 @@ def pull_messages():
 
     response = subscriber.pull(request={"subscription": subscription_path, "max_messages": NUM_MESSAGES})
 
-    messages = []
+    filenames = []
     ack_ids = []
     for received_message in response.received_messages:
         ack_ids.append(received_message.ack_id)
@@ -52,15 +52,21 @@ def pull_messages():
         blob = bucket.blob(data['filename'])
         blob.download_to_file(file_obj=open(os.path.join(DOWNLOAD_FOLDER, str(data['filename'])), 'wb'))
         print("Downloaded file {} to {}".format(data['filename'], os.path.join(DOWNLOAD_FOLDER, data['filename'])))
-        messages.append(data)
+        filenames.append(data['filename'])
 
-    if len(messages) > 0:
+    if len(filenames) > 0:
         subscriber.acknowledge(request={"subscription": subscription_path, "ack_ids": ack_ids})
+
+    filtered_filenames = []
+
+    for name in filenames:
+        if name not in filtered_filenames:
+            filtered_filenames.append(name)
 
     return jsonify({
         'success': True,
-        'data': messages,
-        'count': len(messages)
+        'data': filtered_filenames,
+        'count': len(filtered_filenames)
     })
 
 
