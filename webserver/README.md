@@ -56,8 +56,8 @@ This API is used only for health checks. It directly returns a `200 OK` JSON res
 The response received is:
 ```json
 {
-    'success': true,
-    'msg': 'health is ok'
+    "success": true,
+    "msg": "health is ok"
 }
 ``` 
 
