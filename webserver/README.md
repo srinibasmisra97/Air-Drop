@@ -123,6 +123,36 @@ response.headers['Content-Disposition'] = 'attachment; filename="' + filename + 
 return response
 ```
 
+### GET /api/files
+
+This API returns the list of all files present in the server.
+
+Returned JSON:
+```json
+{
+  "files": [
+    "filename1.txt"
+  ], 
+  "success": true
+}
+```
+
+### DELETE /api/files
+
+Request JSON:
+```json
+{
+    "files": [
+        "filename1.txt",
+        "filename2.txt"
+    ]
+}
+```
+
+This API deletes the list of files provided to it.
+
+It returns the deleted files count.
+
 ## Configs
 
 The configuration of the API server is set using a config file called the `environment.cfg` in the `configs` folder.
