@@ -92,5 +92,19 @@ def download_file():
     response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
     return response
 
+@app.route('/api/files', methods=['GET'])
+def list_files():
+    if not os.path.exists(DOWNLOAD_FOLDER):
+        return jsonify({
+            'success': True,
+            'files': []
+        })
+
+    files = [f for f in os.listdir(DOWNLOAD_FOLDER) if os.path.isfile(os.path.join(DOWNLOAD_FOLDER, f))]
+    return jsonify({
+        'success': True,
+        'files': files
+    })
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
