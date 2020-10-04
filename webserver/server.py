@@ -5,7 +5,8 @@ from flask import Flask, jsonify, request, send_from_directory, make_response
 from google.cloud import pubsub_v1, storage
 
 CONFIG_ENV = os.environ.get("CONFIG_ENV") if os.environ.get("CONFIG_ENV") else "DEV"
-CONFIG_FILEPATH = os.path.join(os.getcwd(), "configs", "environment.cfg")
+CONFIG_FOLDER = os.environ.get("CONFIG_FOLDER") if os.environ.get("CONFIG_FOLDER") else "configs"
+CONFIG_FILEPATH = os.path.join(os.getcwd(), CONFIG_FOLDER, "environment.cfg")
 
 cfg = configparser.RawConfigParser()
 cfg.read(CONFIG_FILEPATH)
