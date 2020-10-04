@@ -91,6 +91,10 @@ def download_file():
 
     response = make_response(send_from_directory(directory=DOWNLOAD_FOLDER, filename=filename))
     response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers['Cache-Control'] = 'public, max-age=0'
     return response
 
 @app.route('/api/files', methods=['GET', 'DELETE'])
