@@ -93,19 +93,40 @@ def download_file():
     response.headers['Content-Disposition'] = 'attachment; filename="' + filename + '"'
     return response
 
-@app.route('/api/files', methods=['GET'])
-def list_files():
-    if not os.path.exists(DOWNLOAD_FOLDER):
+@app.route('/api/files', methods=['GET', 'DELETE'])
+def file_handling():
+    if request.method == 'GET':
+        if not os.path.exists(DOWNLOAD_FOLDER):
+            return jsonify({
+                'success': True,
+                'files': []
+            })
+
+        files = [f for f in os.listdir(DOWNLOAD_FOLDER) if os.path.isfile(os.path.join(DOWNLOAD_FOLDER, f))]
         return jsonify({
             'success': True,
-            'files': []
+            'files': files
         })
+    elif request.method == 'DELETE':
+        request_data = request.get_json();
 
-    files = [f for f in os.listdir(DOWNLOAD_FOLDER) if os.path.isfile(os.path.join(DOWNLOAD_FOLDER, f))]
-    return jsonify({
-        'success': True,
-        'files': files
-    })
+        if 'files' not in request_data:
+            return jsonify({
+                'success': False,
+                'msg': 'files list not provided'
+            })
+
+        files = request_data['files']
+
+        count = 0
+        for file in files:
+            if not os.path.exists(os.path.join(DOWNLOAD_FOLDER, file)):
+                continue
+
+            os.remove(os.path.join(DOWNLOAD_FOLDER, file))
+            count = count + 1
+
+        return jsonify({'success': True, 'count': count})
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
