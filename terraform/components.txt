@@ -1,0 +1,38 @@
+Service Account:
+    name: air-drop-sa
+    roles: Pub/Sub Subscriber, Storage Object Viewer
+
+    name: air-drop-gcsfuse
+    roles: Storage Object Admin
+
+external static ip:
+    name: air-drop-ip
+
+GCE VM:
+    name: air-drop
+    type: f1-micro
+    network: default
+    static ip: air-drop-ip
+    image: air-drop
+    network tags: http-server, https-server
+
+GCS Bucket:
+    name: music-artefacts
+    acl: private
+
+Cloud Functions:
+    name: air-drop
+    environment: python3
+    trigger: gcs-bucket
+        name: music-artefacts
+        event: Finalise/Create
+    envVariables:
+        push_topic: music-artifacts-topic
+
+Pub Sub:
+    topic:
+        name: music-artifacts-topic
+    subscription:
+        name: music-artifacts-sub
+        type: pull
+        topic: music-artifacts-topic
